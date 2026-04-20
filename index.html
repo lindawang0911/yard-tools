@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亞德客服工具</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #DDD8CF;
+    --border2: #C8C2B7;
+    --text: #1A1714;
+    --text2: #6B6560;
+    --text3: #9B948C;
+    --accent: #2D5A3D;
+    --accent-light: #E8F0EA;
+    --accent-border: #A8C8B0;
+    --tag-bg: #EDE8DF;
+    --success: #1B6B3A;
+    --success-bg: #E6F2EB;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Noto Sans TC', sans-serif;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .badge {
+    font-size: 11px;
+    background: var(--tag-bg);
+    color: var(--text2);
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+  }
+
+  /* Main layout */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Top nav tabs */
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 6px;
+  }
+
+  .nav-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .nav-tab:hover { background: var(--surface2); color: var(--text); }
+
+  .nav-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--text3);
+    margin-bottom: 1.5rem;
+  }
+
+  /* Two column layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+    header { padding: 0 1rem; }
+    main { padding: 1.25rem 1rem 3rem; }
+    .nav-tab span.label { display: none; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 1rem;
+  }
+
+  /* Logistics tabs */
+  .logistics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+  }
+
+  .ltab {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--surface2);
+    color: var(--text2);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-align: left;
+  }
+
+  .ltab:hover { border-color: var(--border2); color: var(--text); background: var(--surface); }
+  .ltab.active { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent); }
+  .ltab-full { grid-column: 1 / -1; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  /* Form fields */
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: var(--sans);
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    appearance: none;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent-border);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(45,90,61,0.08);
+  }
+
+  .field input::placeholder { color: var(--text3); }
+
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239B948C' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .disabled-field { opacity: 0.4; pointer-events: none; }
+
+  /* Type button pills (invoice type / quote type) */
+  .type-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+
+  .pill {
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+
+  .pill:hover { border-color: var(--border2); color: var(--text); background: var(--surface); }
+  .pill.active { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent); }
+
+  /* Preview box */
+  .preview-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.125rem;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-all;
+    min-height: 260px;
+  }
+
+  /* Copy button */
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--sans);
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--text);
+    color: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+
+  .copy-btn:hover { background: #333; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .copy-btn:active { transform: translateY(0); box-shadow: none; }
+  .copy-btn.copied { background: var(--success); border-color: var(--success); color: #fff; }
+
+  /* Track link */
+  .track-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    background: var(--accent-light);
+    color: var(--accent);
+    text-decoration: none;
+    transition: all 0.15s;
+    margin-top: 10px;
+  }
+
+  .track-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* Info strip */
+  .info-strip {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .info-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+
+  .info-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <span class="logo-text">亞德客服工具</span>
+    </div>
+    <span class="badge">醫材內部專用</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Navigation tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('shipping', this)">
+      📦 <span class="label">出貨通知</span>
+    </button>
+    <button class="nav-tab" onclick="switchPage('invoice', this)">
+      📄 <span class="label">發票通知</span>
+    </button>
+    <button class="nav-tab" onclick="switchPage('quote', this)">
+      🏥 <span class="label">醫材報價</span>
+    </button>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- PAGE 1: 出貨通知                            -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="page active" id="page-shipping">
+    <p class="page-sub">選擇物流方式 → 填入資訊 → 一鍵複製傳給客人</p>
+
+    <div class="layout">
+      <div class="card">
+        <p class="card-title">物流方式</p>
+
+        <div class="logistics-grid" id="shipTabs">
+          <div class="ltab active" data-type="711"><span>🏪</span> 7-11 店到店</div>
+          <div class="ltab" data-type="family"><span>🏪</span> 全家店到店</div>
+          <div class="ltab" data-type="hilife"><span>🏪</span> 萊爾富店到店</div>
+          <div class="ltab" data-type="okmart"><span>🏪</span> OK 便利商店</div>
+          <div class="ltab ltab-full" data-type="hsinchu"><span>📦</span> 新竹物流宅配</div>
+        </div>
+
+        <hr>
+        <p class="card-title">填寫資訊</p>
+
+        <div class="field">
+          <label id="trackLabel">寄件代碼</label>
+          <input type="text" id="trackingNum" placeholder="例：ABC123456789">
+        </div>
+
+        <div class="field-row">
+          <div class="field" id="phoneWrap">
+            <label>客戶手機末4碼</label>
+            <input type="text" id="phone" placeholder="例：5678" maxlength="4">
+          </div>
+          <div class="field">
+            <label>資訊更新時間</label>
+            <select id="updateTime">
+              <option value="今晚">今晚</option>
+              <option value="今天下午">今天下午</option>
+              <option value="明天上午">明天上午</option>
+              <option value="明天">明天</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="amountWrap">
+          <label>貨到付款金額（$）</label>
+          <input type="number" id="amount" placeholder="例：980">
+          <p class="field-hint">如為預付訂單可留空白</p>
+        </div>
+
+        <div class="field">
+          <label>商品名稱（選填）</label>
+          <input type="text" id="prodNameShip" placeholder="例：遠紅外線治療儀">
+        </div>
+
+        <div class="field">
+          <label>客戶姓名（選填）</label>
+          <input type="text" id="custName" placeholder="例：王小明">
+        </div>
+
+        <hr>
+        <p class="card-title">附加選項</p>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">附上使用說明圖提醒</div>
+            <div style="font-size:11px;color:var(--text3);">訊息末尾自動加入說明圖提醒文字</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0;">
+            <input type="checkbox" id="manualToggle" checked style="opacity:0;width:0;height:0;">
+            <span id="toggleTrack" onclick="toggleManual()" style="position:absolute;cursor:pointer;inset:0;border-radius:22px;background:var(--accent);transition:background 0.2s;">
+              <span id="toggleThumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform 0.2s;transform:translateX(18px);"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <p class="card-title">訊息預覽</p>
+          <div class="preview-box" id="shipPreview"></div>
+          <button class="copy-btn" id="shipCopyBtn" onclick="copyShipping()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            複製通知訊息
+          </button>
+          <div style="text-align:center">
+            <a id="trackLink" href="#" target="_blank" class="track-btn">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              直接開啟物流查詢網址
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-strip">
+      <div class="info-dot"></div>
+      <p class="info-text">
+        LINE 傳送後，訊息中的查詢網址會自動變成可點擊連結，客人可直接查詢物流動態。
+        如使用超商店到店，客人到店後也會收到門市簡訊通知。
+      </p>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- PAGE 2: 發票通知                            -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="page" id="page-invoice">
+    <p class="page-sub">選擇發票類型 → 填入發票號碼與日期 → 一鍵複製</p>
+
+    <div class="layout">
+      <div class="card">
+        <p class="card-title">發票類型</p>
+        <div class="type-pills">
+          <button class="pill active" onclick="selectInvType(this,'紙本電子發票')">紙本電子發票</button>
+          <button class="pill" onclick="selectInvType(this,'載具')">載具</button>
+          <button class="pill" onclick="selectInvType(this,'統一編號')">統一編號</button>
+        </div>
+
+        <hr>
+        <p class="card-title">填寫資訊</p>
+
+        <div class="field">
+          <label>發票號碼</label>
+          <input type="text" id="invNumber" placeholder="例：AB-12345678" oninput="updateInvoice()">
+        </div>
+
+        <div class="field">
+          <label>發票日期</label>
+          <input type="date" id="invDate" oninput="updateInvoice()">
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">訊息預覽</p>
+        <div class="preview-box" id="invPreview"></div>
+        <button class="copy-btn" id="invCopyBtn" onclick="copyInvoice()">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          複製通知訊息
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- PAGE 3: 醫材報價                            -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="page" id="page-quote">
+    <p class="page-sub">填入商品資訊 → 一鍵複製傳給客人</p>
+
+    <div class="layout">
+      <div class="card">
+        <p class="card-title">商品資訊</p>
+
+        <div class="field">
+          <label>商品名稱</label>
+          <input type="text" id="prodName" placeholder="請輸入商品名稱" oninput="updateQuote()">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>未稅價格（含運）</label>
+            <input type="text" id="priceEx" placeholder="例：2,000" oninput="updateQuote()">
+          </div>
+          <div class="field">
+            <label>含稅價格（含運）</label>
+            <input type="text" id="priceInc" placeholder="例：2,100" oninput="updateQuote()">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>未稅運費預估</label>
+            <input type="text" id="shipEx" placeholder="0" oninput="updateQuote()">
+          </div>
+          <div class="field">
+            <label>含稅運費預估</label>
+            <input type="text" id="shipInc" placeholder="0" oninput="updateQuote()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">訊息預覽</p>
+        <div class="preview-box" id="quotePreview"></div>
+        <button class="copy-btn" id="quoteCopyBtn" onclick="copyQuote()">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          複製通知訊息
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ──────────────────────────────────────────
+   PAGE SWITCHING
+────────────────────────────────────────── */
+function switchPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ──────────────────────────────────────────
+   SHIPPING (PAGE 1)
+────────────────────────────────────────── */
+const configs = {
+  "711": {
+    icon:"🏪", name:"7-11 店到店｜物流查詢", label:"寄件代碼",
+    url:"https://eservice.7-11.com.tw/e-tracking/search.aspx",
+    smsNote: p => `📩 到店後 7-11 會寄簡訊至「末碼 ${p}」`,
+    eta:"3～4 天", etaNote:"如遇天候不佳或不可抗力因素，將順延配送🙏",
+    hasCOD: true, extraNote: null,
+  },
+  "family": {
+    icon:"🏪", name:"全家店到店｜物流查詢", label:"物流編號",
+    url:"https://fmec.famiport.com.tw/FP_Entrance/QueryBox",
+    smsNote: p => `📩 到店後全家會寄簡訊至「末碼 ${p}」`,
+    eta:"3～4 天", etaNote:"如遇天候狀況不佳，將延後配送🙏",
+    hasCOD: true, extraNote: null,
+  },
+  "hilife": {
+    icon:"🏪", name:"萊爾富店到店｜物流查詢", label:"寄件代碼",
+    url:"https://www.hilife.com.tw/serviceInfo_search.aspx",
+    smsNote: p => `📩 到店後萊爾富會寄簡訊至「末碼 ${p}」`,
+    eta:"3～4 天", etaNote:"如遇天候不佳或不可抗力因素，將順延配送🙏",
+    hasCOD: true, extraNote: null,
+  },
+  "okmart": {
+    icon:"🏪", name:"OK 便利商店店到店｜物流查詢", label:"寄件代碼",
+    url:"https://www.okmart.com.tw/convenient_StoSQuery",
+    smsNote: p => `📩 到店後 OK 便利商店會寄簡訊至「末碼 ${p}」`,
+    eta:"3～4 天", etaNote:"如遇天候不佳或不可抗力因素，將順延配送🙏",
+    hasCOD: true, extraNote: null,
+  },
+  "hsinchu": {
+    icon:"📦", name:"新竹物流宅配｜物流查詢", label:"查貨號碼",
+    url:"https://www.hct.com.tw/Search/SearchGoods_n.aspx",
+    smsNote: null, eta:"2～3 個工作天",
+    etaNote:"如遇天候或不可抗力因素，將順延配送🙏",
+    hasCOD: false,
+    extraNote:"📢 物流配送由宅配公司負責，如有配送進度或延誤問題，請直接聯繫物流公司查詢，謝謝",
+  },
+};
+
+let currentShipType = "711";
+
+let showManual = true;
+
+function toggleManual() {
+  showManual = !showManual;
+  const thumb = document.getElementById('toggleThumb');
+  const track = document.getElementById('toggleTrack');
+  thumb.style.transform = showManual ? 'translateX(18px)' : 'translateX(0)';
+  track.style.background = showManual ? 'var(--accent)' : 'var(--border2)';
+  updateShipping();
+}
+
+function getShipTemplate() {
+  const cfg = configs[currentShipType];
+  const num  = document.getElementById("trackingNum").value.trim() || "________";
+  const phone = document.getElementById("phone").value.trim() || "____";
+  const amount = document.getElementById("amount").value.trim();
+  const updateTime = document.getElementById("updateTime").value;
+  const name = document.getElementById("custName").value.trim();
+  const prodName = document.getElementById("prodNameShip").value.trim();
+
+  let lines = [];
+  lines.push(`${cfg.icon}【${cfg.name}】`);
+  lines.push(``);
+  if (name && prodName) {
+    lines.push(`${name}，您好！【${prodName}】已安排寄出 😊`);
+  } else if (name) {
+    lines.push(`${name}，您好！商品已安排寄出 😊`);
+  } else if (prodName) {
+    lines.push(`您好，【${prodName}】已安排寄出 😊`);
+  } else {
+    lines.push(`您好，商品已安排寄出 😊`);
+  }
+  lines.push(`物流資訊約 ${updateTime} 會更新`);
+  lines.push(``);
+  lines.push(`🔎 ${cfg.label}：${num}`);
+  lines.push(`🌐 查詢網址：${cfg.url}`);
+  if (cfg.smsNote) lines.push(cfg.smsNote(phone));
+  if (cfg.hasCOD) lines.push(amount ? `💰 請攜帶 $${amount} 前往門市取貨` : `💰 請攜帶貨款前往門市取貨`);
+  lines.push(``);
+  lines.push(`⏱ 到貨時間`);
+  lines.push(`預計約 ${cfg.eta} 抵達（依物流狀況為準）`);
+  lines.push(cfg.etaNote);
+  if (cfg.extraNote) { lines.push(``); lines.push(cfg.extraNote); }
+  lines.push(``);
+  lines.push(`感謝您的購買，有任何問題歡迎隨時聯繫我們 ✨`);
+  if (showManual) {
+    lines.push(``);
+    lines.push(`📋 另附上產品使用說明圖，請於使用前詳閱，如有任何問題歡迎隨時聯繫我們 😊`);
+  }
+  return lines.join("\n");
+}
+
+function updateShipping() {
+  document.getElementById("shipPreview").textContent = getShipTemplate();
+  const cfg = configs[currentShipType];
+  document.getElementById("trackLink").href = cfg.url;
+  document.getElementById("trackLabel").textContent = cfg.label;
+  if (cfg.hasCOD) {
+    document.getElementById("amountWrap").classList.remove("disabled-field");
+    document.getElementById("phoneWrap").style.display = "";
+  } else {
+    document.getElementById("amountWrap").classList.add("disabled-field");
+    document.getElementById("phoneWrap").style.display = "none";
+  }
+}
+
+function copyShipping() {
+  doCopy(getShipTemplate(), "shipCopyBtn");
+}
+
+document.getElementById("shipTabs").addEventListener("click", e => {
+  const tab = e.target.closest(".ltab");
+  if (!tab) return;
+  document.querySelectorAll(".ltab").forEach(t => t.classList.remove("active"));
+  tab.classList.add("active");
+  currentShipType = tab.dataset.type;
+  updateShipping();
+});
+
+["trackingNum","phone","amount","updateTime","custName","prodNameShip"].forEach(id => {
+  document.getElementById(id).addEventListener("input", updateShipping);
+});
+
+/* ──────────────────────────────────────────
+   INVOICE (PAGE 2)
+────────────────────────────────────────── */
+let invType = '紙本電子發票';
+
+function selectInvType(btn, type) {
+  document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  invType = type;
+  updateInvoice();
+}
+
+function todayValue() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatDate(raw) {
+  if (!raw) return '＿＿＿＿年＿＿月＿＿日';
+  const d = new Date(raw);
+  return `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日`;
+}
+
+function getInvDeliveryNote() {
+  if (invType === '紙本電子發票') return '隨貨附上 / 寄送';
+  if (invType === '載具') return '存入您的載具';
+  return '依統編開立並提供電子檔';
+}
+
+function updateInvoice() {
+  const num = document.getElementById('invNumber').value || '＿＿＿＿＿＿';
+  const dateStr = formatDate(document.getElementById('invDate').value);
+  const note = getInvDeliveryNote();
+
+  const msg =
+`📄 發票開立通知
+
+您好，您的發票已完成開立，資訊如下：
+
+▪️ 發票類型：${invType}
+▪️ 發票號碼：${num}
+▪️ 發票日期：${dateStr}
+
+📌 發票將依您的選擇方式提供（${note}）
+📌 如需電子檔發票，歡迎透過 LINE 向我們索取，可自行留存或列印
+📌 若需修改發票內容，請於次月 5 日前告知，逾期或已完成申報者恕無法更改
+
+如有任何疑問，歡迎隨時與我們聯繫，感謝您的支持 🙏`;
+
+  document.getElementById('invPreview').textContent = msg;
+}
+
+function copyInvoice() {
+  doCopy(document.getElementById('invPreview').textContent, 'invCopyBtn');
+}
+
+/* ──────────────────────────────────────────
+   QUOTE (PAGE 3)
+────────────────────────────────────────── */
+function updateQuote() {
+  const name    = document.getElementById('prodName').value || '＿＿＿＿＿＿＿＿＿＿';
+  const priceEx = document.getElementById('priceEx').value || '＿＿＿＿';
+  const priceInc= document.getElementById('priceInc').value || '＿＿＿＿';
+  const shipEx  = document.getElementById('shipEx').value || '0';
+  const shipInc = document.getElementById('shipInc').value || '0';
+
+  const msg =
+`您好～
+
+此商品目前 ✅ 有現貨！
+
+依政府法規，二級醫療器材無法於官網開放下單，如需購買，歡迎直接透過 LINE 下單，付款方式為匯款。
+
+🚚 另外，麻煩您提供一下收件地址，我們會協助確認物流區域。部分地區因運送條件不同，可能需加收運費，感謝您的理解 🙏
+
+📌 商品資訊
+▫️ 商品名稱：${name}
+
+💰 商品報價
+▫️ 未稅參考價：$${priceEx}（含運，運費預估 $${shipEx}）
+▫️ 含稅開立發票：$${priceInc}（含運，運費預估 $${shipInc}）
+
+👉 亞德皆會提供原廠保固貼紙，請放心購買 😊
+
+📄 關於發票
+本店為合法醫療器材行，皆可開立發票。
+開立發票依法需加收 5% 營業稅，報價已事先說明，請依需求選擇，謝謝 🙏
+
+📌 下單流程
+1️⃣ 請於 LINE 傳送收件資料（姓名 ／ 電話 ／ 地址）
+2️⃣ 我們將回覆匯款帳號及實際應付金額
+3️⃣ 中午 12:00 前完成匯款 → 可安排當日新竹物流出貨
+4️⃣ 週六、週日及國定假日物流暫停，一律順延至下一個工作天出貨
+
+如有任何問題，歡迎隨時詢問 😊`;
+
+  document.getElementById('quotePreview').textContent = msg;
+}
+
+function copyQuote() {
+  doCopy(document.getElementById('quotePreview').textContent, 'quoteCopyBtn');
+}
+
+/* ──────────────────────────────────────────
+   SHARED COPY UTIL
+────────────────────────────────────────── */
+function doCopy(text, btnId) {
+  if (!text.trim()) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 已複製！`;
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.classList.remove('copied');
+    }, 2500);
+  });
+}
+
+/* ──────────────────────────────────────────
+   INIT
+────────────────────────────────────────── */
+// Set invoice date to today
+document.getElementById('invDate').value = todayValue();
+
+updateShipping();
+updateInvoice();
+updateQuote();
+</script>
+</body>
+</html>
