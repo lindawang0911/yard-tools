@@ -809,18 +809,44 @@ function copyInvoice() {
 }
 
 /* ──────────────────────────────────────────
-   QUOTE (PAGE 3) — product catalog
+   QUOTE (PAGE 3) — Google Sheets 同步版
 ────────────────────────────────────────── */
-const CATALOG_KEY = 'yadex_catalog';
-let catalog = [];
-let editingIndex = -1;
+const API_URL = 'https://script.google.com/macros/s/AKfycbzkhVS3hVAI1HdsX5e6t6VQs5ewkVZ7Nbj--MZa5kTuciWC3Se5VVT63Fe6zJoGNvP3/exec';
 
-function loadCatalog() {
-  try { catalog = JSON.parse(localStorage.getItem(CATALOG_KEY)) || []; } catch(e) { catalog = []; }
+let catalog = [];
+let editingId = -1; // row id from sheet (1-based data row index)
+
+function apiCall(params) {
+  const url = API_URL + '?' + new URLSearchParams(params);
+  return fetch(url).then(r => r.json());
 }
 
-function saveCatalog() {
-  localStorage.setItem(CATALOG_KEY, JSON.stringify(catalog));
+function apiPost(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+}
+
+function setCatalogLoading(msg) {
+  const list = document.getElementById('catalogList');
+  const empty = document.getElementById('catalogEmpty');
+  empty.style.display = 'none';
+  list.innerHTML = `<div style="text-align:center;padding:1rem;font-size:13px;color:var(--text3);">${msg}</div>`;
+}
+
+function loadCatalog() {
+  setCatalogLoading('載入中…');
+  apiCall({ action: 'list' })
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      catalog = data.products || [];
+      renderCatalog();
+    })
+    .catch(err => {
+      setCatalogLoading('⚠️ 無法連線，請確認 API 是否已部署');
+      console.error(err);
+    });
 }
 
 function renderCatalog() {
@@ -832,31 +858,29 @@ function renderCatalog() {
   sel.innerHTML = '<option value="">— 請選擇 —</option>';
   empty.style.display = catalog.length ? 'none' : 'block';
 
-  catalog.forEach((p, i) => {
-    // catalog row
+  catalog.forEach((p) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);gap:12px;';
     row.innerHTML = `
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
-        <div style="font-size:12px;color:var(--text3);">未稅 $${p.price.toLocaleString()} ／ 含稅 $${p.priceInc.toLocaleString()}</div>
+        <div style="font-size:12px;color:var(--text3);">未稅 $${Number(p.price).toLocaleString()} ／ 含稅 $${Number(p.priceInc).toLocaleString()}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="openEditProduct(${i})" style="padding:5px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;">編輯</button>
-        <button onclick="deleteProduct(${i})" style="padding:5px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:#c0392b;font-size:12px;font-family:var(--sans);cursor:pointer;">刪除</button>
+        <button onclick="openEditProduct(${p.id})" style="padding:5px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;">編輯</button>
+        <button onclick="deleteProduct(${p.id},'${p.name.replace(/'/g,"\\'")} ')" style="padding:5px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:#c0392b;font-size:12px;font-family:var(--sans);cursor:pointer;">刪除</button>
       </div>`;
     list.appendChild(row);
 
-    // dropdown option
     const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `${p.name}（未稅 $${p.price.toLocaleString()}）`;
+    opt.value = p.id;
+    opt.textContent = `${p.name}（未稅 $${Number(p.price).toLocaleString()}）`;
     sel.appendChild(opt);
   });
 }
 
 function openAddProduct() {
-  editingIndex = -1;
+  editingId = -1;
   document.getElementById('modalTitle').textContent = '新增商品';
   document.getElementById('modalName').value = '';
   document.getElementById('modalPrice').value = '';
@@ -864,9 +888,10 @@ function openAddProduct() {
   document.getElementById('modalBackdrop').style.display = 'flex';
 }
 
-function openEditProduct(i) {
-  editingIndex = i;
-  const p = catalog[i];
+function openEditProduct(id) {
+  const p = catalog.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
   document.getElementById('modalTitle').textContent = '編輯商品';
   document.getElementById('modalName').value = p.name;
   document.getElementById('modalPrice').value = p.price;
@@ -883,30 +908,50 @@ function updateModalTax() {
   if (!isNaN(v)) document.getElementById('modalPriceInc').value = Math.round(v * 1.05);
 }
 
+function setSaveLoading(on) {
+  const btn = document.querySelector('#modalBackdrop button[onclick="saveProduct()"]');
+  btn.textContent = on ? '儲存中…' : '儲存';
+  btn.disabled = on;
+}
+
 function saveProduct() {
   const name = document.getElementById('modalName').value.trim();
   const price = parseFloat(document.getElementById('modalPrice').value);
   const priceInc = parseFloat(document.getElementById('modalPriceInc').value);
   if (!name || isNaN(price)) { alert('請填寫商品名稱和未稅價格'); return; }
   const item = { name, price, priceInc: isNaN(priceInc) ? Math.round(price * 1.05) : priceInc };
-  if (editingIndex >= 0) { catalog[editingIndex] = item; } else { catalog.push(item); }
-  saveCatalog();
-  renderCatalog();
-  closeModal();
+
+  setSaveLoading(true);
+  const req = editingId >= 0
+    ? apiPost({ action: 'update', id: editingId, ...item })
+    : apiPost({ action: 'add', ...item });
+
+  req.then(data => {
+    if (data.error) throw new Error(data.error);
+    closeModal();
+    loadCatalog();
+  }).catch(err => {
+    alert('儲存失敗，請稍後再試');
+    console.error(err);
+  }).finally(() => setSaveLoading(false));
 }
 
-function deleteProduct(i) {
-  if (!confirm(`確定要刪除「${catalog[i].name}」嗎？`)) return;
-  catalog.splice(i, 1);
-  saveCatalog();
-  renderCatalog();
-  updateQuote();
+function deleteProduct(id, name) {
+  if (!confirm(`確定要刪除「${name}」嗎？`)) return;
+  apiPost({ action: 'delete', id })
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      loadCatalog();
+      updateQuote();
+    })
+    .catch(() => alert('刪除失敗，請稍後再試'));
 }
 
 function onSelectProduct() {
-  const idx = document.getElementById('prodSelect').value;
-  if (idx === '') return;
-  const p = catalog[parseInt(idx)];
+  const id = parseInt(document.getElementById('prodSelect').value);
+  if (isNaN(id)) return;
+  const p = catalog.find(x => x.id === id);
+  if (!p) return;
   document.getElementById('prodName').value = p.name;
   document.getElementById('priceEx').value = p.price;
   document.getElementById('priceInc').value = p.priceInc;
@@ -1007,8 +1052,7 @@ function doCopy(text, btnId) {
 ────────────────────────────────────────── */
 document.getElementById('invDate').value = todayValue();
 
-loadCatalog();
-renderCatalog();
+loadCatalog(); // 從 Google Sheets 載入商品目錄
 updateShipping();
 updateInvoice();
 updateQuote();
