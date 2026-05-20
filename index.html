@@ -390,6 +390,7 @@
           <div class="ltab" data-type="hilife"><span>🏪</span> 萊爾富店到店</div>
           <div class="ltab" data-type="okmart"><span>🏪</span> OK 便利商店</div>
           <div class="ltab ltab-full" data-type="hsinchu"><span>📦</span> 新竹物流宅配</div>
+          <div class="ltab ltab-full" data-type="post"><span>📮</span> 中華郵政掛號／包裹</div>
         </div>
 
         <hr>
@@ -530,7 +531,7 @@
           ＋ 新增商品
         </button>
       </div>
-      <div id="catalogList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="catalogList" style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding-right:2px;"></div>
       <p id="catalogEmpty" style="font-size:13px;color:var(--text3);text-align:center;padding:1rem 0;">尚無商品，請點「新增商品」建立第一筆</p>
     </div>
 
@@ -661,6 +662,14 @@ const configs = {
     etaNote:"如遇天候或不可抗力因素，將順延配送🙏",
     hasCOD: false,
     extraNote:"📢 物流配送由宅配公司負責，如有配送進度或延誤問題，請直接聯繫物流公司查詢，謝謝",
+  },
+  "post": {
+    icon:"📮", name:"中華郵政｜物流查詢", label:"掛號／包裹號碼",
+    url:"https://postserv.post.gov.tw/pstmail/main_mail.html?targetTxn=EB500100",
+    smsNote: null, eta:"3～5 個工作天",
+    etaNote:"如遇假日或不可抗力因素，將順延配送🙏",
+    hasCOD: false,
+    extraNote:"📢 郵政包裹配送進度請至中華郵政網站輸入號碼查詢，謝謝",
   },
 };
 
